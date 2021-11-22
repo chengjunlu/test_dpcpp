@@ -394,8 +394,9 @@ static OffsetCalculator<num_outputs> make_output_offset_calculator(
 
 int main() {
   constexpr int size=16;
+  assert(0 && "cannot run");
 
-//  char* data[3];
+  char* data[3];
 // Create queue on implementation-chosen default device
   queue Q;
   TensorIterator iter(1, 1);
