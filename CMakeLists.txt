@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.17)
+project(test_dpcpp)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+add_executable(test_no_member_fn main.cpp)
+target_include_directories(test_no_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/GITHUB/include/")
+target_include_directories(test_no_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/GITHUB/include/sycl")
+#target_compile_options(test_no_member_fn PUBLIC "-fsycl;-fsycl-unnamed-lambda")
+target_compile_options(test_no_member_fn PUBLIC "-fsycl")
+target_link_libraries(test_no_member_fn PUBLIC "sycl")
+target_link_options(test_no_member_fn PUBLIC "-fsycl")
+
+
+add_executable(test_member_fn main.cpp)
+target_include_directories(test_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/GITHUB/include/")
+target_include_directories(test_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/GITHUB/include/sycl")
+#target_compile_options(test_member_fn PUBLIC "-fsycl;-fsycl-unnamed-lambda")
+target_compile_definitions(test_member_fn PUBLIC "CALL_AS_MEMBER_FUNC")
+target_compile_options(test_member_fn PUBLIC "-fsycl")
+target_link_libraries(test_member_fn PUBLIC "sycl")
+target_link_options(test_member_fn PUBLIC "-fsycl")
