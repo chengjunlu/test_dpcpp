@@ -293,7 +293,27 @@ static inline void launch_unrolled_kernel(
 #ifdef CALL_AS_MEMBER_FUNC
       auto offset = ic.get(linear_idx);
 #else
-      auto offset = get<arity>(linear_idx, ic.dims, ic.sizes_, ic.strides_);
+//      auto offset = get<arity>(linear_idx, ic.dims, ic.sizes_, ic.strides_);
+        using offset_type = Array<int32_t, arity>;
+        offset_type offset;
+#pragma unroll
+        for (int arg = 0; arg < arity; arg++) {
+          offset[arg] = 0;
+        }
+
+#pragma unroll
+        for (int dim = 0; dim < 12; ++dim) {
+          if (dim == ic.dims) {
+            break;
+          }
+          auto divmod = ic.sizes_[dim].divmod(linear_idx);
+          linear_idx = divmod.div;
+
+#pragma unroll
+          for (int arg = 0; arg < arity; arg++) {
+            offset[arg] += divmod.mod * ic.strides_[arity * dim + arg];
+          }
+        }
 #endif
       static_unroll<unroll_load_test, arity>::with_args(data, args, offset, l, i, 1);
 
