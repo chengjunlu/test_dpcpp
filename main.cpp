@@ -293,40 +293,21 @@ static inline void launch_unrolled_kernel(
 
       int i = 0;
       int linear_idx = thread_idx * vec_size + i;
-#ifdef CALL_AS_MEMBER_FUNC
       using offset_type = Array<int32_t, arity>;
       offset_type offset;
 #pragma unroll
       for (int arg = 0; arg < arity; arg++) {
         offset[arg] = 0;
       }
-
+      auto ndims = ic.dims;
 #pragma unroll
       for (int dim = 0; dim < 12; ++dim) {
-        if (dim == ic.dims) {
+#ifdef CALL_AS_MEMBER_FUNC
+        if (dim == ndims) {
           break;
         }
-        auto divmod = ic.sizes_[dim].divmod(linear_idx);
-        linear_idx = divmod.div;
-
-#pragma unroll
-        for (int arg = 0; arg < arity; arg++) {
-          offset[arg] += divmod.mod * ic.strides_[arity * dim + arg];
-        }
-      }
 #else
-      using offset_type = Array<int32_t, arity>;
-      offset_type offset;
-#pragma unroll
-      for (int arg = 0; arg < arity; arg++) {
-        offset[arg] = 0;
-      }
-
-#pragma unroll
-      for (int dim = 0; dim < 12; ++dim) {
-//        if (dim == ic.dims) {
-//          break;
-//        }
+#endif
         auto divmod = ic.sizes_[dim].divmod(linear_idx);
         linear_idx = divmod.div;
 
@@ -335,7 +316,6 @@ static inline void launch_unrolled_kernel(
           offset[arg] += divmod.mod * ic.strides_[arity * dim + arg];
         }
       }
-#endif
 
       static_unroll<unroll_load_test, arity>::with_args(data_ptr, args, offset, l, i, 1);
 
