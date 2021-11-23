@@ -278,6 +278,15 @@ static inline void launch_unrolled_kernel(
   char* data_ptr[3];
   for(int i =0; i < 3; i++)
     data_ptr[i] = data[i];
+
+  auto ndims = ic.dims;
+  decltype(ic.strides_) strides_;
+  for (int i = 0; i < sizeof(strides_); i++)
+    strides_[i]= ic.strides_[i];
+  decltype(ic.sizes_) sizes_;
+  for (int i = 0; i < sizeof(sizes_); i++)
+    sizes_[i]= ic.sizes_[i];
+
   auto cgf = [&](handler &cgh) {
     auto kfn = [=](cl::sycl::item<1> item_id) {
       int thread_idx = item_id.get_linear_id();
@@ -299,7 +308,7 @@ static inline void launch_unrolled_kernel(
       for (int arg = 0; arg < arity; arg++) {
         offset[arg] = 0;
       }
-      auto ndims = ic.dims;
+
 #pragma unroll
       for (int dim = 0; dim < 12; ++dim) {
 #ifdef CALL_AS_MEMBER_FUNC
@@ -308,12 +317,12 @@ static inline void launch_unrolled_kernel(
         }
 #else
 #endif
-        auto divmod = ic.sizes_[dim].divmod(linear_idx);
+        auto divmod = sizes_[dim].divmod(linear_idx);
         linear_idx = divmod.div;
 
 #pragma unroll
         for (int arg = 0; arg < arity; arg++) {
-          offset[arg] += divmod.mod * ic.strides_[arity * dim + arg];
+          offset[arg] += divmod.mod * strides_[arity * dim + arg];
         }
       }
 
