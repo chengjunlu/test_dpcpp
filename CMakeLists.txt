@@ -8,6 +8,7 @@ target_include_directories(test_no_member_fn PUBLIC "/home/john/intel/dpcpp/onea
 target_include_directories(test_no_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/GITHUB/include/sycl")
 #target_compile_options(test_no_member_fn PUBLIC "-fsycl;-fsycl-unnamed-lambda")
 target_compile_options(test_no_member_fn PUBLIC "-fsycl")
+target_compile_options(test_no_member_fn PUBLIC "-O3")
 target_link_libraries(test_no_member_fn PUBLIC "sycl")
 target_link_options(test_no_member_fn PUBLIC "-fsycl")
 
@@ -18,5 +19,6 @@ target_include_directories(test_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/
 #target_compile_options(test_member_fn PUBLIC "-fsycl;-fsycl-unnamed-lambda")
 target_compile_definitions(test_member_fn PUBLIC "CALL_AS_MEMBER_FUNC")
 target_compile_options(test_member_fn PUBLIC "-fsycl")
+target_compile_options(test_member_fn PUBLIC "-O3")
 target_link_libraries(test_member_fn PUBLIC "sycl")
 target_link_options(test_member_fn PUBLIC "-fsycl")
