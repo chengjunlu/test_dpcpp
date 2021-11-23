@@ -275,6 +275,9 @@ static inline void launch_unrolled_kernel(
   using ret_t = typename traits::result_type;
   int thread_num = (N + vec_size - 1) / vec_size;
 
+  char* data_ptr[3];
+  for(int i =0; i < 3; i++)
+    data_ptr[i] = data[i];
   auto cgf = [&](handler &cgh) {
     auto kfn = [=](cl::sycl::item<1> item_id) {
       int thread_idx = item_id.get_linear_id();
@@ -315,14 +318,14 @@ static inline void launch_unrolled_kernel(
           }
         }
 #endif
-      static_unroll<unroll_load_test, arity>::with_args(data, args, offset, l, i, 1);
+      static_unroll<unroll_load_test, arity>::with_args(data_ptr, args, offset, l, i, 1);
 
       // unroll the compute multiple times
       static_unroll<apply_vec_test, vec_size>::with_args(results, f, args);
 
       linear_idx = thread_idx * vec_size + i;
       int __offset = linear_idx;
-      s.store(results[i], data[0], __offset);
+      s.store(results[i], data_ptr[0], __offset);
     };
 
     cgh.parallel_for(cl::sycl::range</*dim=*/1>(thread_num), kfn);
