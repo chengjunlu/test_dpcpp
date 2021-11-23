@@ -275,10 +275,6 @@ static inline void launch_unrolled_kernel(
   using ret_t = typename traits::result_type;
   int thread_num = (N + vec_size - 1) / vec_size;
 
-  int dims = ic.dims;
-  auto sizes = ic.sizes_;
-  auto strides = ic.strides_;
-
   auto cgf = [&](handler &cgh) {
     auto kfn = [=](cl::sycl::item<1> item_id) {
       int thread_idx = item_id.get_linear_id();
@@ -297,7 +293,7 @@ static inline void launch_unrolled_kernel(
 #ifdef CALL_AS_MEMBER_FUNC
       auto offset = ic.get(linear_idx);
 #else
-      auto offset = get<arity>(linear_idx, dims, sizes, strides);
+      auto offset = get<arity>(linear_idx, ic.dims, ic.sizes_, ic.strides_);
 #endif
       static_unroll<unroll_load_test, arity>::with_args(data, args, offset, l, i, 1);
 
