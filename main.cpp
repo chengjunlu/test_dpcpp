@@ -311,18 +311,14 @@ static inline void launch_unrolled_kernel(
 
 #pragma unroll
       for (int dim = 0; dim < 12; ++dim) {
-#ifdef CALL_AS_MEMBER_FUNC
-        if (dim == ndims) {
-          break;
-        }
-#else
-#endif
-        auto divmod = sizes_[dim].divmod(linear_idx);
-        linear_idx = divmod.div;
+        if (dim < ndims) {
+          auto divmod = sizes_[dim].divmod(linear_idx);
+          linear_idx = divmod.div;
 
 #pragma unroll
-        for (int arg = 0; arg < arity; arg++) {
-          offset[arg] += divmod.mod * strides_[arity * dim + arg];
+          for (int arg = 0; arg < arity; arg++) {
+            offset[arg] += divmod.mod * strides_[arity * dim + arg];
+          }
         }
       }
 
