@@ -24,11 +24,16 @@ static inline void launch_unrolled_kernel(
   for (int i = 0; i < sizeof(strides); i++)
     strides[i]= i;
 
+  char* data_ptr[ARRAY_SIZE];
+  for(int i =0; i < ARRAY_SIZE; i++)
+    data_ptr[i] = data[i];
+
   auto cgf = [&](handler &cgh) {
     auto kfn = [=](cl::sycl::item<1> item_id) {
       int thread_idx = item_id.get_linear_id();
       for (int i = 0; i < ARRAY_SIZE; i++) {
-        data[i][thread_idx] = strides[i];
+        auto ptr = data_ptr[i];
+        ptr[thread_idx] = strides[i];
       }
     };
 
