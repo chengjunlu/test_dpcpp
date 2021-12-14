@@ -6,6 +6,8 @@
 
 using namespace sycl;
 
+#define ARRAY_SIZE 12
+
 template <
         int vec_size,
         typename func_t,
@@ -18,15 +20,15 @@ static inline void launch_unrolled_kernel(
   using traits = function_traits<func_t>;
   using ret_t = typename traits::result_type;
   int thread_num = (N + vec_size - 1) / vec_size;
-  int strides[12];
+  int strides[ARRAY_SIZE];
   for (int i = 0; i < sizeof(strides); i++)
     strides[i]= i;
 
   auto cgf = [&](handler &cgh) {
     auto kfn = [=](cl::sycl::item<1> item_id) {
       int thread_idx = item_id.get_linear_id();
-      for (int i = 0; i < 12; i++) {
-        data[thread_idx][i] = strides[i];
+      for (int i = 0; i < ARRAY_SIZE; i++) {
+        data[i][thread_idx] = strides[i];
       }
     };
 
@@ -39,7 +41,7 @@ int main() {
   constexpr int size=16;
   assert(0 && "cannot run");
 
-  char* data[3];
+  char* data[ARRAY_SIZE];
 // Create queue on implementation-chosen default device
   queue Q;
 // Create buffer using host allocated "data" array
