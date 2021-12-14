@@ -28,20 +28,26 @@ static inline void launch_unrolled_kernel(
   for(int i =0; i < ARRAY_SIZE; i++)
     data_ptr[i] = data[i];
 
+  int loop_end_cond = ARRAY_SIZE - 1;
+
   auto cgf = [&](handler &cgh) {
     auto kfn = [=](cl::sycl::item<1> item_id) {
       int thread_idx = item_id.get_linear_id();
 #ifdef CALL_AS_MEMBER_FUNC
-#pragma unroll (1)
+#pragma unroll
       for (int i = 0; i < ARRAY_SIZE; i++) {
+        if (i == loop_end_cond)
+          break;
         auto ptr = data_ptr[i];
         ptr[thread_idx] = strides[i];
       }
 #else
 #pragma unroll
       for (int i = 0; i < ARRAY_SIZE; i++) {
-        auto ptr = data_ptr[i];
-        ptr[thread_idx] = strides[i];
+        if (i < loop_end_cond) {
+          auto ptr = data_ptr[i];
+          ptr[thread_idx] = strides[i];
+        }
       }
 #endif
     };
