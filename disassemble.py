@@ -88,11 +88,11 @@ if __name__ == '__main__':
         # unbundle the object
         run(['clang-offload-bundler',
              '-type=o',
-             '-targets=host-x86_64-unknown-linux-gnu,sycl-spir64-unknown-unknown-sycldevice',
+             '-targets=host-x86_64-unknown-linux-gnu,sycl-spir64-unknown-unknown',
              '-inputs={}'.format(args.obj),
              '-outputs={},{}'.format(host_obj, gpu_llvm),
-             '-unbundle',
-             '-allow-missing-bundles'])
+             '-unbundle'
+             ])
 
         # sycl post link
         gpu_post_link_llvm = get_tmp_file(basename, "post.bc")
