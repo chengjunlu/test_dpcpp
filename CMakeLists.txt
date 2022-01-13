@@ -22,3 +22,5 @@ target_compile_options(test_member_fn PUBLIC "-fsycl")
 target_compile_options(test_member_fn PUBLIC "-O3")
 target_link_libraries(test_member_fn PUBLIC "sycl")
 target_link_options(test_member_fn PUBLIC "-fsycl")
+
+add_subdirectory(test_memory_size)
