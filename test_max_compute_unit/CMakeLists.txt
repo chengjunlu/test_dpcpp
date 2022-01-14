@@ -1,0 +1,7 @@
+add_executable(test_max_compute_unit main.cpp)
+#target_include_directories(test_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/GITHUB/include/")
+#target_include_directories(test_member_fn PUBLIC "/home/john/intel/dpcpp/oneapi/GITHUB/include/sycl")
+target_compile_options(test_max_compute_unit PUBLIC "-fsycl")
+target_compile_options(test_max_compute_unit PUBLIC "-O3")
+target_link_libraries(test_max_compute_unit PUBLIC "sycl")
+target_link_options(test_max_compute_unit PUBLIC "-fsycl")
