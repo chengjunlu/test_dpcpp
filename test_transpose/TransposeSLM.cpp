@@ -60,8 +60,8 @@ void test_transpose(sycl::queue& queue){
   float* data_ptr = (float*)malloc_device(sizeof(float)* NUM_WORK_ITEM * VEC_SIZE, queue);
   auto numel = NUM_WORK_ITEM*VEC_SIZE;
   auto vec_size = VEC_SIZE;
-  auto thread_num = NUM_WORK_ITEM*VEC_SIZE;
-  auto work_group_size = NUM_WORK_ITEM*VEC_SIZE;
+  auto thread_num = NUM_WORK_ITEM;
+  auto work_group_size = NUM_WORK_ITEM;
 
   auto cgf = [&](sycl::handler & cgh) {
       VectorizedPolicy p(
