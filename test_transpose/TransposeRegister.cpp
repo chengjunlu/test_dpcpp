@@ -1,12 +1,13 @@
 //
-// Created by john on 2022/1/26.
+// Created by john on 2022/1/27.
 //
-#include "TransposeSLM.hpp"
+#include "TransposeRegister.hpp"
 
 #define VEC_SIZE 4
 #define NUM_WORK_ITEM 16
 
-using namespace TransposeShareLocalMemroy;
+using namespace sycl;
+using namespace TransposeRegister;
 
 struct TensorStoreWithOutCast {
   template <typename scalar_t>
@@ -18,19 +19,44 @@ struct TensorStoreWithOutCast {
 struct VectorizedPolicy {
   void* out_data;
   TensorStoreWithOutCast storer;
-  TransposeSLM transpose;
 
   VectorizedPolicy(
-          void* out_data,
-          TransposeSLM transpose)
+          void* out_data)
           : out_data(out_data),
-            storer(),
-            transpose(transpose){};
+            storer(){};
 
   template <typename scalar_t, int unroll_size>
   void store(sycl::vec<scalar_t, unroll_size>& value, uint32_t linear_idx) {
-    transpose.template transpose<scalar_t, unroll_size>(value);
-    storer.store(value, out_data, (linear_idx + unroll_size * 0) / unroll_size);
+
+#ifdef TRANSPOSE_REGISTER_ISSUE
+    Transpose<2, 2, 1>(value);
+    Transpose<2, 2, 8>(value);
+#endif
+
+
+    auto sub_group = sycl::ext::oneapi::experimental::this_sub_group();
+    auto sub_group_local_id = sub_group.get_local_linear_id();
+    auto sub_group_size = sub_group.get_local_linear_range();
+    auto shuffle_id = sub_group_local_id / 2;
+    shuffle_id = (shuffle_id % 4) * 2 + (shuffle_id / 4);
+    shuffle_id = shuffle_id * 2 + sub_group_local_id % 2;
+
+    DPCPP_K_PRINT("sub group %d data %f %f %f %f -> %d: \n ", sub_group_local_id,
+                  value[0],
+                  value[1],
+                  value[2],
+                  value[3],
+                  shuffle_id);
+
+    auto value_store = sub_group.shuffle(value, shuffle_id);
+
+    DPCPP_K_PRINT("sub group %d -> data %f %f %f %f\n ", sub_group_local_id,
+                  value_store[0],
+                  value_store[1],
+                  value_store[2],
+                  value_store[3]);
+
+    storer.store(value_store, out_data, linear_idx / unroll_size);
   };
 };
 
@@ -54,18 +80,16 @@ void distribution_kernel(
     p.store(result, linear_idx);
   }
 }
-
 void test_transpose(sycl::queue& queue){
 
   float* data_ptr = (float*)malloc_device(sizeof(float)* NUM_WORK_ITEM * VEC_SIZE, queue);
   auto numel = NUM_WORK_ITEM*VEC_SIZE;
   auto vec_size = VEC_SIZE;
-  auto thread_num = NUM_WORK_ITEM*VEC_SIZE;
-  auto work_group_size = NUM_WORK_ITEM*VEC_SIZE;
+  auto thread_num = NUM_WORK_ITEM;
+  auto work_group_size = NUM_WORK_ITEM;
 
   auto cgf = [&](sycl::handler & cgh) {
-      VectorizedPolicy p(
-              data_ptr, {work_group_size, cgh});
+      VectorizedPolicy p(data_ptr);
       cgh.parallel_for(
               sycl::nd_range<1>(thread_num, work_group_size),
               [=](sycl::nd_item<1> id) {

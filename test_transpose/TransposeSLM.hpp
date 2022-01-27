@@ -5,22 +5,7 @@
 #include <array>
 #include <iostream>
 #include <stdint.h>
-
-// Kernel inside print utils
-#if defined(__SYCL_DEVICE_ONLY__)
-#define DPCPP_CONSTANT __attribute__((opencl_constant))
-#else
-#define DPCPP_CONSTANT
-#endif
-
-#define DPCPP_KER_STRING(var, str) static const DPCPP_CONSTANT char var[] = str;
-#define DPCPP_KER_PRINTF sycl::ext::oneapi::experimental::printf
-
-#define DPCPP_K_PRINT(fmt_str, ...)           \
-  {                                           \
-    DPCPP_KER_STRING(fmt_var, fmt_str);       \
-    DPCPP_KER_PRINTF(fmt_var, ##__VA_ARGS__); \
-  }
+#include "TransposeUtils.h"
 
 namespace TransposeShareLocalMemroy{
   using namespace sycl;
@@ -85,4 +70,4 @@ private:
 };
 }
 
-void test_transpose_slm(sycl::queue& queue);
+void test_transpose(sycl::queue& queue);

@@ -27,5 +27,5 @@ int main() {
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
 
-  test_transpose_slm(queue);
+  test_transpose(queue);
 }
