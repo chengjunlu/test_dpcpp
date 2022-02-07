@@ -37,6 +37,9 @@ public:
     T* store_ptr = reinterpret_cast<T*>(store_base.get());
     sub_group.store<vec_size>(sycl::local_ptr<T>(store_ptr), data);
 
+    // add the barrier to sync the execution in the sub-group.
+    group_barrier(sub_group);
+
     auto load_base = store_base.get();
     sycl::vec<T, vec_size>* load_ptr =
             reinterpret_cast<sycl::vec<T, vec_size>*>(load_base) +
