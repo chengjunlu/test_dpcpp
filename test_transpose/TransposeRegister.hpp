@@ -21,7 +21,12 @@ template <
 void Transpose(sycl::vec<T, vec_size>& data) {
   auto sub_group = sycl::ext::oneapi::experimental::this_sub_group();
   auto sub_group_id = sub_group.get_local_linear_id();
+  auto sub_group_size = sub_group.get_local_linear_range();
+  if (sub_group_size <= grouped_columns)
+    return;
 
+
+  DPCPP_K_PRINT("sub group %d sub_group_size!!! %d \n ",sub_group_id, sub_group_size);
   constexpr int row_stride = grouped_rows * rows;
 #pragma unroll
   for (int i = 1; i < rows; i++) {
@@ -34,7 +39,15 @@ void Transpose(sycl::vec<T, vec_size>& data) {
                 (((sub_group_id / grouped_columns) % rows) ^ i) * grouped_rows +
                 row_base + row;
 #if 1
+
+//        DPCPP_K_PRINT("sub group %d send data %f -> %d \n ", sub_group_id,
+//                      data[row_idx],
+//                      tgt_idx);
+
         data[row_idx] = sub_group.shuffle(data[row_idx], tgt_idx);
+
+//        DPCPP_K_PRINT("sub group %d recv data %f \n ", sub_group_id,
+//                      data[row_idx]);
 #else
         auto swapped_data = sub_group.shuffle(data[row_idx], tgt_idx);
         if (row_idx == 0)

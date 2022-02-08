@@ -5,6 +5,7 @@
 
 #define VEC_SIZE 4
 #define NUM_WORK_ITEM 16
+#define GROUP_CNT 2
 
 using namespace sycl;
 using namespace TransposeRegister;
@@ -30,16 +31,19 @@ struct VectorizedPolicy {
 
 #ifdef TRANSPOSE_REGISTER_ISSUE
     Transpose<2, 2, 1>(value);
-    Transpose<2, 2, 8>(value);
+    Transpose<2, 2, NUM_WORK_ITEM/2>(value);
 #endif
 
 
     auto sub_group = sycl::ext::oneapi::experimental::this_sub_group();
     auto sub_group_local_id = sub_group.get_local_linear_id();
     auto sub_group_size = sub_group.get_local_linear_range();
-    auto shuffle_id = sub_group_local_id / 2;
-    shuffle_id = (shuffle_id % 4) * 2 + (shuffle_id / 4);
-    shuffle_id = shuffle_id * 2 + sub_group_local_id % 2;
+    auto shuffle_id = sub_group_local_id;
+    auto suffle_cnt = sub_group_size / GROUP_CNT;
+    suffle_cnt = suffle_cnt / 2;
+    shuffle_id = (shuffle_id / GROUP_CNT);
+    shuffle_id = (shuffle_id % suffle_cnt) * 2 + (shuffle_id / suffle_cnt);
+    shuffle_id = shuffle_id * GROUP_CNT + sub_group_local_id % GROUP_CNT;
 
     DPCPP_K_PRINT("sub group %d data %f %f %f %f -> %d: \n ", sub_group_local_id,
                   value[0],
