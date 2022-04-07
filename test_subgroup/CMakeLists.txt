@@ -1,0 +1,5 @@
+add_executable(test_subgroup main.cpp SubgroupBallot.cpp)
+target_compile_options(test_subgroup PUBLIC "-fsycl")
+target_compile_options(test_subgroup PUBLIC "-O3")
+target_link_libraries(test_subgroup PUBLIC "sycl")
+target_link_options(test_subgroup PUBLIC "-fsycl")

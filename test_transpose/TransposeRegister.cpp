@@ -3,8 +3,8 @@
 //
 #include "TransposeRegister.hpp"
 
-#define VEC_SIZE 4
-#define NUM_WORK_ITEM 16
+#define VEC_SIZE 2
+#define NUM_WORK_ITEM 8
 #define GROUP_CNT 2
 
 using namespace sycl;
@@ -29,36 +29,14 @@ struct VectorizedPolicy {
   template <typename scalar_t, int unroll_size>
   void store(sycl::vec<scalar_t, unroll_size>& value, uint32_t linear_idx) {
 
-#ifdef TRANSPOSE_REGISTER_ISSUE
-    Transpose<2, 2, 1>(value);
-    Transpose<2, 2, NUM_WORK_ITEM/2>(value);
-#endif
-
-
     auto sub_group = sycl::ext::oneapi::experimental::this_sub_group();
     auto sub_group_local_id = sub_group.get_local_linear_id();
     auto sub_group_size = sub_group.get_local_linear_range();
-    auto shuffle_id = sub_group_local_id;
-    auto suffle_cnt = sub_group_size / GROUP_CNT;
-    suffle_cnt = suffle_cnt / 2;
-    shuffle_id = (shuffle_id / GROUP_CNT);
-    shuffle_id = (shuffle_id % suffle_cnt) * 2 + (shuffle_id / suffle_cnt);
-    shuffle_id = shuffle_id * GROUP_CNT + sub_group_local_id % GROUP_CNT;
-
-    DPCPP_K_PRINT("sub group %d data %f %f %f %f -> %d: \n ", sub_group_local_id,
-                  value[0],
-                  value[1],
-                  value[2],
-                  value[3],
-                  shuffle_id);
-
-    auto value_store = sub_group.shuffle(value, shuffle_id);
-
-    DPCPP_K_PRINT("sub group %d -> data %f %f %f %f\n ", sub_group_local_id,
-                  value_store[0],
-                  value_store[1],
-                  value_store[2],
-                  value_store[3]);
+    sycl::vec<scalar_t, unroll_size> value_store;
+    if (sub_group_local_id % 2 == 0)
+      value_store = Transpose<2, 1, 2>(value);
+    else
+      value_store = value;
 
     storer.store(value_store, out_data, linear_idx / unroll_size);
   };
