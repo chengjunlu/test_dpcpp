@@ -1,0 +1,5 @@
+add_executable(test_gpu_watch_dog main.cpp SlowKernel.cpp)
+target_compile_options(test_gpu_watch_dog PUBLIC "-fsycl")
+target_compile_options(test_gpu_watch_dog PUBLIC "-O3")
+target_link_libraries(test_gpu_watch_dog PUBLIC "sycl")
+target_link_options(test_gpu_watch_dog PUBLIC "-fsycl")
