@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 project(test_dpcpp)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Modules)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 add_executable(test_no_member_fn main.cpp)
@@ -27,3 +28,4 @@ add_subdirectory(test_memory_size)
 add_subdirectory(test_max_compute_unit)
 add_subdirectory(test_transpose)
 add_subdirectory(test_subgroup)
+#add_subdirectory(test_lz_module)
