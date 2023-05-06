@@ -1,9 +1,11 @@
 add_executable(test_transpose_pass main.cpp TransposeSLM.cpp)
 target_compile_options(test_transpose_pass PUBLIC "-fsycl")
+target_compile_options(test_transpose_pass PUBLIC "-fno-sycl-instrument-device-code")
 target_compile_options(test_transpose_pass PUBLIC "-O3")
 target_link_libraries(test_transpose_pass PUBLIC "sycl")
 target_link_options(test_transpose_pass PUBLIC "-fsycl")
 target_compile_definitions(test_transpose_pass PUBLIC "PASS_WITH_PRINTF_IN_KERNEL")
+target_compile_definitions(test_transpose_pass PUBLIC "SYCL_FALLBACK_ASSERT=1")
 
 add_executable(test_transpose_fail main.cpp TransposeSLM.cpp)
 target_compile_options(test_transpose_fail PUBLIC "-fsycl")
