@@ -394,9 +394,9 @@ int main() {
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
   sycl::device device = root_devices[0];
-  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_c9dcff473c1817d25cf236bca39658a4_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_c9dcff473c1817d25cf236bca39658a4_kernel_spvbin[0]);
+  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_e5e9d90dc27f1f8db0633ba2c56f689c_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_e5e9d90dc27f1f8db0633ba2c56f689c_kernel_spvbin[0]);
   sycl::kernel& kernel = spirv_to_sycl_kernel(device,
-                                              (uint32_t*)_home_guangyey__triton_cache_c9dcff473c1817d25cf236bca39658a4_kernel_spvbin,
+                                              (uint32_t*)_home_guangyey__triton_cache_e5e9d90dc27f1f8db0633ba2c56f689c_kernel_spvbin,
                                               binary_size_in_char/4,
                                               "kernel_0d1d");
 
@@ -430,11 +430,11 @@ int main() {
   sycl_kernel_launch(1, 1, 1, 8, 32, 2048,
                      queue, kernel, input, output);
 
-  float* output_host = (float*)malloc(sizeof(float)* 128);
-  e = queue.memcpy(output_host, output, sizeof(float)* 128);
+  float* output_host = (float*)malloc(sizeof(float)* column);
+  e = queue.memcpy(output_host, output, sizeof(float)* column);
   e.wait();
 
-  for(int i =0; i < 128; i++ ) {
+  for(int i =0; i < column; i++ ) {
     std::cout << " " << output_host[i];
   }
   std::cout << std::endl;
