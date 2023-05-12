@@ -264,7 +264,7 @@ using namespace sycl;
 
 constexpr size_t row = 4;
 constexpr size_t row_malloced = 8;
-constexpr size_t column = 128;
+constexpr size_t column = 64;
 
 float input_host[row_malloced*column] = { 2.7627e-01, -1.8546e+00,  6.2390e-01,  1.1453e+00,  1.0372e+00,
        1.8866e+00, -1.1170e-01, -3.6210e-01,  1.4868e-01, -4.3778e-01,
@@ -407,13 +407,13 @@ int main() {
   for (size_t i = row * column; i < row_malloced * column; i++) {
     input_host[i] = 100.0;
   }
-#if 0
+
   for(int i =0; i < row_malloced; i++ ) {
     for (int j = 0; j < column; j++) {
-      input_host[i * column + j] = j / 32 + i * 10;
+      input_host[i * column + j] =i * column + j;
     }
   }
-#endif
+
   std::cout << " input_host value" << std::endl;
   for(int i =0; i < row_malloced; i++ ) {
     std::cout << "[";
