@@ -433,6 +433,7 @@ int main() {
       // #blocked = #triton_gpu.blocked<{sizePerThread = [1, 2], threadsPerWarp = [1, 32], warpsPerCTA = [4, 2], order = [1, 0]}>
       auto threadId = item.get_local_id(0);
       print_cur_float(threadId, 0, local_buffer.get_pointer().get(), (float)threadId);
+      item.barrier(access::fence_space::local_space);
       print_acc_float(threadId, 0, local_buffer.get_pointer().get(), (float)threadId);
 //      print_output_float(threadId, 0, (float)threadId);
     };

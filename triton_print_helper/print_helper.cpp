@@ -20,4 +20,9 @@ SYCL_EXTERNAL void print_output_float(uint32_t tid, uint32_t stage, float f) {
   static const __attribute__((opencl_constant)) char var[] = "tid %d stage %d output = %f\n";
   sycl::ext::oneapi::experimental::printf(var, tid, stage, f);
 }
+
+SYCL_EXTERNAL void dpcpp_barrier(sycl::nd_item<1> item) {
+  item.barrier(sycl::access::fence_space::local_space);
+}
+
 }
