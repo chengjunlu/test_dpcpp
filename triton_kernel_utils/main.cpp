@@ -394,9 +394,9 @@ int main() {
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
   sycl::device device = root_devices[0];
-  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_adeb2e6848b4e6b77a5b73c7a2c05ae9_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_adeb2e6848b4e6b77a5b73c7a2c05ae9_kernel_spvbin[0]);
+  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_9fe47f8d09c3ce5e13e1a92cebfdffb0_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_9fe47f8d09c3ce5e13e1a92cebfdffb0_kernel_spvbin[0]);
   sycl::kernel& kernel = spirv_to_sycl_kernel(device,
-                                              (uint32_t*)_home_guangyey__triton_cache_adeb2e6848b4e6b77a5b73c7a2c05ae9_kernel_spvbin,
+                                              (uint32_t*)_home_guangyey__triton_cache_9fe47f8d09c3ce5e13e1a92cebfdffb0_kernel_spvbin,
                                               binary_size_in_char/4,
                                               "kernel_0d1d");
 
@@ -407,13 +407,13 @@ int main() {
   for (size_t i = row * column; i < row_malloced * column; i++) {
     input_host[i] = 100.0;
   }
-
+#if 0
   for(int i =0; i < row_malloced; i++ ) {
     for (int j = 0; j < column; j++) {
       input_host[i * column + j] = j / 32 + i * 10;
     }
   }
-
+#endif
   std::cout << " input_host value" << std::endl;
   for(int i =0; i < row_malloced; i++ ) {
     std::cout << "[";
