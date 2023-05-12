@@ -6,6 +6,7 @@
 #include <level_zero/ze_api.h>
 #include <cstdlib>
 #include "triton_kernel.h"
+#include "print_helper.h"
 
 static bool getBoolEnv(const std::string &env) {
   const char *s = std::getenv(env.c_str());
@@ -374,6 +375,8 @@ float input_host[row_malloced*column] = { 2.7627e-01, -1.8546e+00,  6.2390e-01, 
 
 #define ceil(m, n) ((m) + (n) - 1) / (n)
 
+SYCL_EXTERNAL void print_float(float f);
+
 int main() {
 
   auto plaform_list = platform::get_platforms();
@@ -394,12 +397,6 @@ int main() {
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
   sycl::device device = root_devices[0];
-  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_adeb2e6848b4e6b77a5b73c7a2c05ae9_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_adeb2e6848b4e6b77a5b73c7a2c05ae9_kernel_spvbin[0]);
-  sycl::kernel& kernel = spirv_to_sycl_kernel(device,
-                                              (uint32_t*)_home_guangyey__triton_cache_adeb2e6848b4e6b77a5b73c7a2c05ae9_kernel_spvbin,
-                                              binary_size_in_char/4,
-                                              "kernel_0d1d");
-
 
   float* input = (float*)malloc_device(sizeof(float)* row_malloced * column, queue);
   float* output = (float*)malloc_device(sizeof(float)* column, queue);
@@ -427,19 +424,6 @@ int main() {
   auto e = queue.memcpy(input, input_host, sizeof(float) * row_malloced * column);
   e.wait();
 
-  sycl_kernel_launch(1, 1, 1, 8, 32, 2048,
-                     queue, kernel, input, output);
-
-  float* output_host = (float*)malloc(sizeof(float)* 128);
-  e = queue.memcpy(output_host, output, sizeof(float)* 128);
-  e.wait();
-
-  for(int i =0; i < 128; i++ ) {
-    std::cout << " " << output_host[i];
-  }
-  std::cout << std::endl;
-
-#if 0
   auto cgf = [&](sycl::handler &cgh) {
     using share_mem_t = sycl::accessor<int8_t, 1, sycl::access::mode::read_write, sycl::access::target::local>;
     share_mem_t local_buffer = share_mem_t(2048, cgh);
@@ -448,77 +432,9 @@ int main() {
       // The ids mimic the
       // #blocked = #triton_gpu.blocked<{sizePerThread = [1, 2], threadsPerWarp = [1, 32], warpsPerCTA = [4, 2], order = [1, 0]}>
       auto threadId = item.get_local_id(0);
-      unsigned laneId = (unsigned)threadId % 32;
-      unsigned warpId = (unsigned)threadId / 32;
-
-      constexpr unsigned sizePerThread[2] = {1, 2};
-      constexpr unsigned threadsPerWarp[2] = {1, 32};
-      constexpr unsigned warpsPerCTA[2] = {4, 2};
-      constexpr unsigned order[2] = {1, 0};
-
-      const unsigned multiDimWarpId[2] = {(warpId / warpsPerCTA[1]), warpId % warpsPerCTA[1]};
-
-      const unsigned multiDimThreadId[2] = {(laneId / sizePerThread[1]), laneId % sizePerThread[1]};
-
-      // Wrap around multiDimWarpId/multiDimThreadId incase
-      // shape[k] < shapePerCTA[k]
-      constexpr unsigned shape[] = {4, 128};
-      constexpr unsigned maxWarps_0 = ceil(4, 1 * 1);
-      constexpr unsigned maxWarps_1 = ceil(128, 2 * 32);
-      constexpr unsigned maxThreads_0 = ceil(4, 1);
-      constexpr unsigned maxThreads_1 = ceil(128, 2);
-
-      const size_t roundMultiDimWarpId[2] = {(multiDimWarpId[0] % maxWarps_0), (multiDimWarpId[1] % maxWarps_1)};
-
-      const size_t roundMultiDimThreadId[2] = {(multiDimThreadId[0] % maxThreads_0), (multiDimThreadId[1] % maxThreads_1)};
-
-      const size_t multiDimBase[2] = { ((roundMultiDimWarpId[0] * threadsPerWarp[0]) + roundMultiDimThreadId[0]) * sizePerThread[0],
-          ((roundMultiDimWarpId[1] * threadsPerWarp[1]) + roundMultiDimThreadId[1]) * sizePerThread[1], };
-
-      constexpr unsigned shapePerCTA[] = {sizePerThread[0] * threadsPerWarp[0] * warpsPerCTA[0],
-          sizePerThread[1] * threadsPerWarp[1] * warpsPerCTA[1],};
-
-      constexpr unsigned tilesPerDim[] = {ceil(shape[0], shapePerCTA[0]),
-          ceil(shape[1], shapePerCTA[1]),};
-
-      unsigned offset[2][] = {
-          { 0 * sizePerThread[0] *
-               threadsPerWarp[0] * warpsPerCTA[0] +
-           0 * sizePerThread[0] *
-               threadsPerWarp[0] +
-           0 * sizePerThread[0] + 0,
-              0 * sizePerThread[0] *
-                    threadsPerWarp[0] * warpsPerCTA[0] +
-                0 * sizePerThread[0] *
-                    threadsPerWarp[0] +
-                0 * sizePerThread[0] + 0,},
-          {}
-      };
-
-      auto threadsPerWarp = (local_id / 2) % 32;
-      auto threadsPerWarp_X = threadsPerWarp % 32;
-      auto threadsPerWarp_Y = (threadsPerWarp / 32) % 1;
-
-      auto warpsPerCTA = local_id / (2 * 32);
-      auto warpsPerCTA_X = warpsPerCTA % 2;
-      auto warpsPerCTA_Y = (warpsPerCTA / 2) % 4;
-
-      auto elem0 = input[0 + (threadsPerWarp_X + threadsPerWarp_Y * 32) * 2 + (warpsPerCTA_X + warpsPerCTA_Y * 2) * 2 * 32];
-      auto elem1 = input[1 + (threadsPerWarp_X + threadsPerWarp_Y * 32) * 2 + (warpsPerCTA_X + warpsPerCTA_Y * 2) * 2 * 32];
-      auto share_ptr = (float*)local_buffer.get_pointer().get();
-
-      // put data
-      share_ptr[0] = elem0;
-      item.barrier(sycl::access::fence_space::local_space);
-
-      // get data
-      auto rhs = share_ptr[0];
-
-      // compare
-      auto max = std::max(elem0, rhs);
-
-
-      output[local_id] = 1;
+      print_cur_float(threadId, 0, (float)threadId);
+      print_acc_float(threadId, 0, (float)threadId);
+      print_output_float(threadId, 0, (float)threadId);
     };
 
     cgh.parallel_for(
@@ -530,6 +446,7 @@ int main() {
 
   queue.submit(cgf);
 
+  float* output_host = (float*)malloc(sizeof(float)* 128);
   e = queue.memcpy(output_host, output, sizeof(float)* 128);
   e.wait();
 
@@ -537,5 +454,5 @@ int main() {
     std::cout << " " << output_host[i];
   }
   std::cout << std::endl;
-#endif
+
 }
