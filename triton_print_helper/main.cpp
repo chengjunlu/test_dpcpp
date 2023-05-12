@@ -425,16 +425,16 @@ int main() {
   e.wait();
 
   auto cgf = [&](sycl::handler &cgh) {
-    using share_mem_t = sycl::accessor<int8_t, 1, sycl::access::mode::read_write, sycl::access::target::local>;
+    using share_mem_t = sycl::accessor<float, 1, sycl::access::mode::read_write, sycl::access::target::local>;
     share_mem_t local_buffer = share_mem_t(2048, cgh);
 
     auto kfn = [=](sycl::nd_item<1> item) {
       // The ids mimic the
       // #blocked = #triton_gpu.blocked<{sizePerThread = [1, 2], threadsPerWarp = [1, 32], warpsPerCTA = [4, 2], order = [1, 0]}>
       auto threadId = item.get_local_id(0);
-      print_cur_float(threadId, 0, (float)threadId);
-      print_acc_float(threadId, 0, (float)threadId);
-      print_output_float(threadId, 0, (float)threadId);
+      print_cur_float(threadId, 0, local_buffer.get_pointer().get(), (float)threadId);
+      print_acc_float(threadId, 0, local_buffer.get_pointer().get(), (float)threadId);
+//      print_output_float(threadId, 0, (float)threadId);
     };
 
     cgh.parallel_for(
