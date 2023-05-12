@@ -394,9 +394,9 @@ int main() {
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
   sycl::device device = root_devices[0];
-  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_e5e9d90dc27f1f8db0633ba2c56f689c_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_e5e9d90dc27f1f8db0633ba2c56f689c_kernel_spvbin[0]);
+  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_2f13351352338a79ea368192c022557d_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_2f13351352338a79ea368192c022557d_kernel_spvbin[0]);
   sycl::kernel& kernel = spirv_to_sycl_kernel(device,
-                                              (uint32_t*)_home_guangyey__triton_cache_e5e9d90dc27f1f8db0633ba2c56f689c_kernel_spvbin,
+                                              (uint32_t*)_home_guangyey__triton_cache_2f13351352338a79ea368192c022557d_kernel_spvbin,
                                               binary_size_in_char/4,
                                               "kernel_0d1d");
 
