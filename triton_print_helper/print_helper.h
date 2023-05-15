@@ -8,5 +8,7 @@ SYCL_EXTERNAL void print_cur_float(uint32_t tid, uint32_t stage, sycl::_V1::loca
 
 SYCL_EXTERNAL void print_acc_float(uint32_t tid, uint32_t stage, sycl::_V1::local_ptr<float>::pointer_t ptr, float f);
 
-SYCL_EXTERNAL void print_output_float(uint32_t tid, uint32_t stage, float f);
+SYCL_EXTERNAL void print_output_float(uint32_t tid, uint32_t stage, sycl::_V1::local_ptr<float>::pointer_t ptr, float f);
+
+SYCL_EXTERNAL void print_write_index(uint32_t tid, uint32_t stage, uint32_t index);
 }

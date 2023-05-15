@@ -438,7 +438,7 @@ int main() {
       print_cur_float(threadId, 0, local_buffer.get_pointer().get(), value);
       item.barrier(access::fence_space::local_space);
       print_acc_float(threadId, 0, local_buffer.get_pointer().get(), value);
-//      print_output_float(threadId, 0, (float)threadId);
+      print_output_float(threadId, 0, local_buffer.get_pointer().get(), value);
     };
 
     cgh.parallel_for(

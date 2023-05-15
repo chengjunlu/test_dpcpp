@@ -264,7 +264,7 @@ using namespace sycl;
 
 constexpr size_t row = 4;
 constexpr size_t row_malloced = 8;
-constexpr size_t column = 64;
+constexpr size_t column = 128;
 
 float input_host[row_malloced*column] = { 2.7627e-01, -1.8546e+00,  6.2390e-01,  1.1453e+00,  1.0372e+00,
        1.8866e+00, -1.1170e-01, -3.6210e-01,  1.4868e-01, -4.3778e-01,
@@ -394,9 +394,9 @@ int main() {
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
   sycl::device device = root_devices[0];
-  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_2f13351352338a79ea368192c022557d_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_2f13351352338a79ea368192c022557d_kernel_spvbin[0]);
+  auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_e980f32b0890ac95c6d3f6229d3375f4_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_e980f32b0890ac95c6d3f6229d3375f4_kernel_spvbin[0]);
   sycl::kernel& kernel = spirv_to_sycl_kernel(device,
-                                              (uint32_t*)_home_guangyey__triton_cache_2f13351352338a79ea368192c022557d_kernel_spvbin,
+                                              (uint32_t*)_home_guangyey__triton_cache_e980f32b0890ac95c6d3f6229d3375f4_kernel_spvbin,
                                               binary_size_in_char/4,
                                               "kernel_0d1d");
 
