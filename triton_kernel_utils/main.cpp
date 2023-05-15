@@ -247,7 +247,6 @@ static void sycl_kernel_launch(int gridX,
         using share_mem_t = sycl::accessor<int8_t, 1, sycl::access::mode::read_write, sycl::access::target::local>;
         share_mem_t local_buffer = share_mem_t(shared_memory, cgh);
         cgh.set_arg(num_params, local_buffer.get_pointer());
-        //cgh.parallel_for(sycl::nd_range{sycl::range{(uint32_t)gridX*threads_per_warp*num_warps}, sycl::range{work_group_size}}, kernel_ptr);
         cgh.parallel_for(parallel_work_size, kernel_ptr);
     } else {
         cgh.parallel_for(parallel_work_size, kernel_ptr);
@@ -394,6 +393,8 @@ int main() {
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
   sycl::device device = root_devices[0];
+  auto share_local_memory_size = device.get_info<sycl::info::device::local_mem_size>();
+  std::cout << " device share local memory size: " << share_local_memory_size << std::endl;
   auto binary_size_in_char = sizeof(_home_guangyey__triton_cache_f8ae7fe8f3e2cdef10ae96cbc0ffa76f_kernel_spvbin) / sizeof(_home_guangyey__triton_cache_f8ae7fe8f3e2cdef10ae96cbc0ffa76f_kernel_spvbin[0]);
   sycl::kernel& kernel = spirv_to_sycl_kernel(device,
                                               (uint32_t*)_home_guangyey__triton_cache_f8ae7fe8f3e2cdef10ae96cbc0ffa76f_kernel_spvbin,
