@@ -2,6 +2,8 @@
 // Created by john on 2022/1/27.
 //
 #include "ThreadsSpawnTest.hpp"
+#include <map>
+#include <vector>
 
 #define NUM_WORK_GROUP 64
 #define SLM_SIZE 64 * 1024
@@ -38,6 +40,13 @@ void print_time(const char* prefix, sycl::queue& queue, ulong* time_stamp, unsig
   }
 }
 
+ulong* to_host(sycl::queue& queue, ulong* time_stamp, unsigned size) {
+  ulong* out_host = (ulong*)malloc(sizeof(ulong)* NUM_WORK_GROUP);
+  auto e = queue.memcpy(out_host, time_stamp, sizeof(ulong)* NUM_WORK_GROUP);
+  e.wait();
+  return out_host;
+}
+
 void test_subgroup_ballot(sycl::queue& queue){
 
   ulong* time_entry = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
@@ -66,8 +75,40 @@ void test_subgroup_ballot(sycl::queue& queue){
 
   queue.submit(cgf);
   queue.wait();
-  print_time("time_entry", queue, time_entry, NUM_WORK_GROUP);
-  print_time("time_exit", queue, time_exit, NUM_WORK_GROUP);
-  print_time("sub_slice_id", queue, sub_slice_id, NUM_WORK_GROUP);
-  print_time("eu_id", queue, eu_id, NUM_WORK_GROUP);
+//  print_time("time_entry", queue, time_entry, NUM_WORK_GROUP);
+//  print_time("time_exit", queue, time_exit, NUM_WORK_GROUP);
+//  print_time("sub_slice_id", queue, sub_slice_id, NUM_WORK_GROUP);
+//  print_time("eu_id", queue, eu_id, NUM_WORK_GROUP);
+  ulong* time_entry_host = to_host(queue, time_entry, NUM_WORK_GROUP);
+  ulong* time_exit_host = to_host(queue, time_exit, NUM_WORK_GROUP);
+  ulong* sub_slice_id_host = to_host(queue, sub_slice_id, NUM_WORK_GROUP);
+  ulong* eu_id_host = to_host(queue, eu_id, NUM_WORK_GROUP);
+
+  struct time_stamp {
+    ulong work_group_id;
+    ulong entry;
+    ulong exit;
+    ulong sub_slice_id;
+    ulong eu_id;
+  };
+
+  std::map<unsigned, std::vector<struct time_stamp>> time_map;
+
+  for (unsigned i = 0; i < NUM_WORK_GROUP; ++i) {
+    struct time_stamp ts;
+    ts.work_group_id = i;
+    ts.entry = time_entry_host[i];
+    ts.exit = time_exit_host[i];
+    ts.sub_slice_id = sub_slice_id_host[i];
+    ts.eu_id = eu_id_host[i];
+    time_map[ts.sub_slice_id].push_back(ts);
+  }
+
+  for (auto& kv : time_map) {
+    printf("sub_slice_id: %d, total work group num: %d\n", kv.first, kv.second.size());
+      for (auto& ts : kv.second) {
+        printf("work_group_id: %ld, eu_id: %ld, entry: %ld, exit: %ld\n", ts.work_group_id, ts.eu_id, ts.entry,
+               ts.exit);
+      }
+  }
 }
