@@ -8,6 +8,7 @@
 #define NUM_WORK_GROUP 64
 #define SLM_SIZE 64 * 1024
 #define OVERLOADABLE __attribute__((overloadable))
+#define FREQUENCY 1.6e9
 
 #ifdef __SYCL_DEVICE_ONLY__
 SYCL_EXTERNAL extern "C" ulong __builtin_spirv_OpReadClockKHR_i64_i32(uint scope);
@@ -105,10 +106,21 @@ void test_subgroup_ballot(sycl::queue& queue){
   }
 
   for (auto& kv : time_map) {
-    printf("sub_slice_id: %d, total work group num: %d\n", kv.first, kv.second.size());
-      for (auto& ts : kv.second) {
-        printf("work_group_id: %ld, eu_id: %ld, entry: %ld, exit: %ld\n", ts.work_group_id, ts.eu_id, ts.entry,
-               ts.exit);
+    printf("sub_slice_id: %d, total work group num: %zu\n", kv.first, kv.second.size());
+    std::vector<long> diff;
+    for (unsigned i = 0; i < kv.second.size(); i++) {
+      if (i == 0) {
+        continue;
       }
+      auto& ts = kv.second[i];
+      auto& prev_ts = kv.second[i-1];
+      printf("work_group_id: %ld, eu_id: %ld, entry: %ld, exit: %ld, diff: %ld\n", ts.work_group_id, ts.eu_id, ts.entry,
+             ts.exit, ts.entry - prev_ts.exit);
+      diff.push_back(ts.entry - prev_ts.exit);
+    }
+    long total_diff = std::accumulate(diff.begin(), diff.end(), 0);
+    long avg_diff = total_diff / (kv.second.size() - 1);
+    printf("total_diff: %ld, avg_diff:%ld\n", total_diff, avg_diff);
+    printf("avg_overhead:%fus\n", avg_diff / FREQUENCY * 1e6);
   }
 }
