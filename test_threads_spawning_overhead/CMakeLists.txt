@@ -1,0 +1,5 @@
+add_executable(test_threads_spawn main.cpp ThreadsSpawnTest.cpp)
+target_compile_options(test_threads_spawn PUBLIC "-fsycl")
+target_compile_options(test_threads_spawn PUBLIC "-O3")
+target_link_libraries(test_threads_spawn PUBLIC "sycl")
+target_link_options(test_threads_spawn PUBLIC "-fsycl")
