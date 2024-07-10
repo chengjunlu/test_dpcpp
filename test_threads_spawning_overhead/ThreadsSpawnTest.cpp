@@ -123,8 +123,8 @@ void test_subgroup_ballot(sycl::queue& queue){
       continue;
     }
     auto& prev_ts = time_stamp[i-1];
-    printf("john lu work_group_id: %ld, sub_slice_id: %ld, entry: %ld, exit: %ld, diff: %ld\n", ts.work_group_id, ts.sub_slice_id, ts.entry,
-           ts.exit, ts.entry - prev_ts.exit);
+    printf("john lu work_group_id: %ld, sub_slice_id: %ld, entry: %ld, exit: %ld, diff start: %ld\n", ts.work_group_id, ts.sub_slice_id, ts.entry,
+           ts.exit, ts.entry - prev_ts.entry);
   }
 
   for (auto& kv : time_map) {
