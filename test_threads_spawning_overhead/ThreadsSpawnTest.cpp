@@ -105,21 +105,28 @@ void test_subgroup_ballot(sycl::queue& queue){
     time_map[ts.sub_slice_id].push_back(ts);
   }
 
+  for (unsigned i = 0; i < NUM_WORK_GROUP; ++i) {
+  }
+
   for (auto& kv : time_map) {
     printf("sub_slice_id: %d, total work group num: %zu\n", kv.first, kv.second.size());
     std::vector<long> diff;
-    for (unsigned i = 0; i < kv.second.size(); i++) {
+    auto time_stamp = kv.second;
+    std::sort(time_stamp.begin(), time_stamp.end(), [](const struct time_stamp& a, const struct time_stamp& b) {
+      return a.entry < b.entry;
+    });
+    for (unsigned i = 0; i < time_stamp.size(); i++) {
       if (i == 0) {
         continue;
       }
-      auto& ts = kv.second[i];
-      auto& prev_ts = kv.second[i-1];
+      auto& ts = time_stamp[i];
+      auto& prev_ts = time_stamp[i-1];
       printf("work_group_id: %ld, eu_id: %ld, entry: %ld, exit: %ld, diff: %ld\n", ts.work_group_id, ts.eu_id, ts.entry,
              ts.exit, ts.entry - prev_ts.exit);
       diff.push_back(ts.entry - prev_ts.exit);
     }
     long total_diff = std::accumulate(diff.begin(), diff.end(), 0);
-    long avg_diff = total_diff / (kv.second.size() - 1);
+    long avg_diff = total_diff / (time_stamp.size() - 1);
     printf("total_diff: %ld, avg_diff:%ld\n", total_diff, avg_diff);
     printf("avg_overhead:%fus\n", avg_diff / FREQUENCY * 1e6);
   }
