@@ -61,12 +61,13 @@ void test_subgroup_ballot(sycl::queue& queue){
       cgh.parallel_for(
               sycl::nd_range<1>(NUM_WORK_GROUP, 1),
               [=](sycl::nd_item<1> id) {
-                  local_buffer[0] = 0;
                   auto work_group_linear_id = id.get_group_linear_id();
                   auto start_time = __builtin_spirv_OpReadClockKHR_i64_i32(0);
                   time_entry[work_group_linear_id] = start_time;
 
                   sub_slice_id[work_group_linear_id] = intel_get_subslice_id();
+                  auto a = local_buffer[work_group_linear_id];
+                  local_buffer[work_group_linear_id] = a + 1;
                   eu_id[work_group_linear_id] = intel_get_eu_id();
 
                   auto end_time = __builtin_spirv_OpReadClockKHR_i64_i32(0);
@@ -105,7 +106,25 @@ void test_subgroup_ballot(sycl::queue& queue){
     time_map[ts.sub_slice_id].push_back(ts);
   }
 
-  for (unsigned i = 0; i < NUM_WORK_GROUP; ++i) {
+  std::vector<struct time_stamp> time_stamp;
+  for (auto& kv : time_map) {
+    time_stamp.insert(time_stamp.end(), kv.second.begin(), kv.second.end());
+  }
+
+  std::sort(time_stamp.begin(), time_stamp.end(), [](const struct time_stamp& a, const struct time_stamp& b) {
+    return a.entry < b.entry;
+  });
+
+  for (unsigned i = 0; i < time_stamp.size(); i++) {
+    auto& ts = time_stamp[i];
+    if (i == 0) {
+      printf("john lu work_group_id: %ld, sub_slice_id: %ld, entry: %ld, exit: %ld\n", ts.work_group_id, ts.sub_slice_id, ts.entry,
+             ts.exit);
+      continue;
+    }
+    auto& prev_ts = time_stamp[i-1];
+    printf("john lu work_group_id: %ld, sub_slice_id: %ld, entry: %ld, exit: %ld, diff: %ld\n", ts.work_group_id, ts.sub_slice_id, ts.entry,
+           ts.exit, ts.entry - prev_ts.exit);
   }
 
   for (auto& kv : time_map) {
