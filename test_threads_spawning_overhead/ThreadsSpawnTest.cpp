@@ -62,7 +62,7 @@ void test_subgroup_ballot(sycl::queue& queue){
               sycl::nd_range<1>(NUM_WORK_GROUP, 1),
               [=](sycl::nd_item<1> id) {
                   local_buffer[0] = 0;
-                  auto work_group_linear_id = id.get_global_linear_id();
+                  auto work_group_linear_id = id.get_group_linear_id();
                   auto start_time = __builtin_spirv_OpReadClockKHR_i64_i32(0);
                   time_entry[work_group_linear_id] = start_time;
 
@@ -76,10 +76,10 @@ void test_subgroup_ballot(sycl::queue& queue){
 
   queue.submit(cgf);
   queue.wait();
-//  print_time("time_entry", queue, time_entry, NUM_WORK_GROUP);
-//  print_time("time_exit", queue, time_exit, NUM_WORK_GROUP);
-//  print_time("sub_slice_id", queue, sub_slice_id, NUM_WORK_GROUP);
-//  print_time("eu_id", queue, eu_id, NUM_WORK_GROUP);
+  print_time("time_entry", queue, time_entry, NUM_WORK_GROUP);
+  print_time("time_exit", queue, time_exit, NUM_WORK_GROUP);
+  print_time("sub_slice_id", queue, sub_slice_id, NUM_WORK_GROUP);
+  print_time("eu_id", queue, eu_id, NUM_WORK_GROUP);
   ulong* time_entry_host = to_host(queue, time_entry, NUM_WORK_GROUP);
   ulong* time_exit_host = to_host(queue, time_exit, NUM_WORK_GROUP);
   ulong* sub_slice_id_host = to_host(queue, sub_slice_id, NUM_WORK_GROUP);
@@ -116,10 +116,12 @@ void test_subgroup_ballot(sycl::queue& queue){
       return a.entry < b.entry;
     });
     for (unsigned i = 0; i < time_stamp.size(); i++) {
+      auto& ts = time_stamp[i];
       if (i == 0) {
+        printf("work_group_id: %ld, eu_id: %ld, entry: %ld, exit: %ld\n", ts.work_group_id, ts.eu_id, ts.entry,
+               ts.exit);
         continue;
       }
-      auto& ts = time_stamp[i];
       auto& prev_ts = time_stamp[i-1];
       printf("work_group_id: %ld, eu_id: %ld, entry: %ld, exit: %ld, diff: %ld\n", ts.work_group_id, ts.eu_id, ts.entry,
              ts.exit, ts.entry - prev_ts.exit);
