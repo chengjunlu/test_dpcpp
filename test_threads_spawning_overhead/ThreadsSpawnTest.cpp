@@ -56,11 +56,15 @@ ulong* to_host(sycl::queue& queue, ulong* time_stamp, unsigned size) {
   return out_host;
 }
 
-void test_subgroup_ballot(sycl::queue& queue){
+template <int arch>
+void test_threads_spawn_overhead(sycl::queue& queue){
 
   ulong* time_entry = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
   ulong* time_exit = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
-  ulong* dual_subslice_id = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
+  ulong* dual_subslice_id;
+  if constexpr (arch == ATS) {
+    dual_subslice_id = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
+  }
   ulong* slice_id = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
   ulong* sub_slice_id = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
   ulong* eu_id = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
@@ -75,8 +79,11 @@ void test_subgroup_ballot(sycl::queue& queue){
                   auto start_time = __builtin_spirv_OpReadClockKHR_i64_i32(0);
                   time_entry[work_group_linear_id] = start_time;
 
-                  dual_subslice_id[work_group_linear_id] = intel_get_dual_subslice_id();
                   slice_id[work_group_linear_id] = intel_get_slice_id();
+
+                  if constexpr (arch == ATS)
+                    dual_subslice_id[work_group_linear_id] = intel_get_dual_subslice_id();
+
                   sub_slice_id[work_group_linear_id] = intel_get_subslice_id();
                   eu_id[work_group_linear_id] = intel_get_eu_id();
                   // touch the SLM
@@ -98,7 +105,11 @@ void test_subgroup_ballot(sycl::queue& queue){
   ulong* time_entry_host = to_host(queue, time_entry, NUM_WORK_GROUP);
   ulong* time_exit_host = to_host(queue, time_exit, NUM_WORK_GROUP);
   ulong* slice_id_host = to_host(queue, slice_id, NUM_WORK_GROUP);
-  ulong* dual_subslice_id_host = to_host(queue, dual_subslice_id, NUM_WORK_GROUP);
+
+  ulong* dual_subslice_id_host;
+  if constexpr (arch == ATS)
+    dual_subslice_id_host = to_host(queue, dual_subslice_id, NUM_WORK_GROUP);
+
   ulong* sub_slice_id_host = to_host(queue, sub_slice_id, NUM_WORK_GROUP);
   ulong* eu_id_host = to_host(queue, eu_id, NUM_WORK_GROUP);
 
@@ -120,7 +131,10 @@ void test_subgroup_ballot(sycl::queue& queue){
     ts.entry = time_entry_host[i];
     ts.exit = time_exit_host[i];
     ts.slice_id = slice_id_host[i];
-    ts.dual_subslice_id = dual_subslice_id_host[i];
+    if constexpr (arch == ATS)
+      ts.dual_subslice_id = dual_subslice_id_host[i];
+    else
+      ts.dual_subslice_id = 0;
     ts.sub_slice_id = sub_slice_id_host[i];
     ts.eu_id = eu_id_host[i];
     time_map[{ts.slice_id, ts.dual_subslice_id, ts.sub_slice_id}].push_back(ts);
@@ -174,3 +188,6 @@ void test_subgroup_ballot(sycl::queue& queue){
     printf("avg_overhead:%fus\n", avg_diff / FREQUENCY * 1e6);
   }
 }
+
+template void test_threads_spawn_overhead<ATS>(sycl::queue& queue);
+template void test_threads_spawn_overhead<PVC>(sycl::queue& queue);

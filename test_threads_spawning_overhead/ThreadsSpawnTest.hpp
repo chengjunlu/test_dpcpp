@@ -6,4 +6,9 @@
 #include <iostream>
 #include <stdint.h>
 
-void test_subgroup_ballot(sycl::queue& queue);
+
+#define ATS 0
+#define PVC 1
+
+template <int arch>
+void test_threads_spawn_overhead(sycl::queue& queue);

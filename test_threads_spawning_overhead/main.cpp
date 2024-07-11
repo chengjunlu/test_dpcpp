@@ -31,6 +31,11 @@ int main() {
   std::cout << " simd width number:" << root_devices[0].get_info<sycl::ext::intel::info::device::gpu_eu_simd_width>() << std::endl;
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
-
-  test_subgroup_ballot(queue);
+  auto device_arch = root_devices[0].get_info<sycl::ext::oneapi::experimental::info::device::architecture>();
+  if (device_arch == sycl::ext::oneapi::experimental::architecture::intel_gpu_dg2_g10)
+    test_threads_spawn_overhead<ATS>(queue);
+  else if (device_arch == sycl::ext::oneapi::experimental::architecture::intel_gpu_pvc)
+    test_threads_spawn_overhead<PVC>(queue);
+  else
+    std::cout << "un-supported GPU arch:" << static_cast<unsigned>(device_arch) << std::endl;
 }
