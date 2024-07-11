@@ -6,7 +6,6 @@
 #include <vector>
 
 #define NUM_WORK_GROUP 256
-#define SLM_SIZE 64 * 1024
 #define OVERLOADABLE __attribute__((overloadable))
 #define FREQUENCY 1.6e9
 
@@ -69,9 +68,11 @@ void test_threads_spawn_overhead(sycl::queue& queue){
   ulong* sub_slice_id = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
   ulong* eu_id = (ulong*)malloc_device(sizeof(ulong)* NUM_WORK_GROUP, queue);
 
+  auto slm_size = queue.get_device().get_info<sycl::info::device::local_mem_size>();
+
   auto cgf = [&](sycl::handler & cgh) {
       using share_mem_t = sycl::local_accessor<int8_t, 1>;
-      share_mem_t local_buffer = share_mem_t(SLM_SIZE, cgh);
+      share_mem_t local_buffer = share_mem_t(slm_size, cgh);
       cgh.parallel_for(
               sycl::nd_range<1>(NUM_WORK_GROUP, 1),
               [=](sycl::nd_item<1> id) {
@@ -164,7 +165,7 @@ void test_threads_spawn_overhead(sycl::queue& queue){
 #endif
 
   for (auto& kv : time_map) {
-    printf("slice_id: %d, dual_subslice_id: %ld, sub_slice_id: %d, total work group num: %zu\n", std::get<0>(kv.first), std::get<1>(kv.first), std::get<2>(kv.first), kv.second.size());
+    printf("slice_id: %d, dual_subslice_id: %d, sub_slice_id: %d, total work group num: %zu\n", std::get<0>(kv.first), std::get<1>(kv.first), std::get<2>(kv.first), kv.second.size());
     std::vector<long> diff;
     auto time_stamp = kv.second;
     std::sort(time_stamp.begin(), time_stamp.end(), [](const struct time_stamp& a, const struct time_stamp& b) {

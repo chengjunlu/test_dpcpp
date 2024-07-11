@@ -29,6 +29,7 @@ int main() {
   std::cout << "         eu number:" << root_devices[0].get_info<sycl::ext::intel::info::device::gpu_eu_count_per_subslice>() << std::endl;
   std::cout << "physthreads number:" << root_devices[0].get_info<sycl::ext::intel::info::device::gpu_hw_threads_per_eu>() << std::endl;
   std::cout << " simd width number:" << root_devices[0].get_info<sycl::ext::intel::info::device::gpu_eu_simd_width>() << std::endl;
+  std::cout << "          SLM size:" << root_devices[0].get_info<sycl::info::device::local_mem_size>() << std::endl;
   sycl::queue queue = sycl::queue(root_devices[0], {property::queue::in_order(),
            property::queue::enable_profiling()});
   auto device_arch = root_devices[0].get_info<sycl::ext::oneapi::experimental::info::device::architecture>();
